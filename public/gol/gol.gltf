@@ -1,0 +1,240 @@
+{
+  "asset": {
+    "generator": "UnityGLTF",
+    "version": "2.0"
+  },
+  "extensionsUsed": [
+    "KHR_texture_transform"
+  ],
+  "scene": 0,
+  "scenes": [
+    {
+      "nodes": [
+        0
+      ],
+      "name": "gol"
+    }
+  ],
+  "accessors": [
+    {
+      "bufferView": 0,
+      "componentType": 5126,
+      "count": 258488,
+      "type": "VEC3",
+      "max": [
+        8.1758995056152344,
+        6.9114589691162109,
+        45.262737274169922
+      ],
+      "min": [
+        -11.664277076721191,
+        -13.23241138458252,
+        13.428756713867188
+      ]
+    },
+    {
+      "bufferView": 1,
+      "componentType": 5126,
+      "count": 258488,
+      "type": "VEC3",
+      "max": [
+        0.99998080730438232,
+        0.99999916553497314,
+        0.99997687339782715
+      ],
+      "min": [
+        -0.99998819828033447,
+        -0.99999344348907471,
+        -0.99996411800384521
+      ]
+    },
+    {
+      "bufferView": 2,
+      "componentType": 5126,
+      "count": 258488,
+      "type": "VEC4",
+      "max": [
+        0.99999988079071045,
+        1.0,
+        0.99999988079071045,
+        -1.0
+      ],
+      "min": [
+        -1.0,
+        -0.99993479251861572,
+        -1.0,
+        -1.0
+      ]
+    },
+    {
+      "bufferView": 3,
+      "componentType": 5126,
+      "count": 258488,
+      "type": "VEC2",
+      "max": [
+        0.99975579977035522,
+        0.99975591897964478
+      ],
+      "min": [
+        0.000244140625,
+        0.065673947334289551
+      ]
+    },
+    {
+      "bufferView": 4,
+      "componentType": 5126,
+      "count": 258488,
+      "type": "VEC4",
+      "max": [
+        0.99607843160629272,
+        0.99607843160629272,
+        0.99607843160629272,
+        1.0
+      ],
+      "min": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "bufferView": 5,
+      "componentType": 5125,
+      "count": 750000,
+      "type": "SCALAR",
+      "max": [
+        258487.0
+      ],
+      "min": [
+        0.0
+      ]
+    }
+  ],
+  "buffers": [
+    {
+      "uri": "gol.bin",
+      "byteLength": 19543232
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteLength": 3101856,
+      "byteStride": 12,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 3101856,
+      "byteLength": 3101856,
+      "byteStride": 12,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 6203712,
+      "byteLength": 4135808,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 10339520,
+      "byteLength": 2067904,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 12407424,
+      "byteLength": 4135808,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 16543232,
+      "byteLength": 3000000,
+      "target": 34963
+    }
+  ],
+  "images": [
+    {
+      "uri": "bud_u1_v1.jpg",
+      "name": "bud_u1_v1"
+    }
+  ],
+  "materials": [
+    {
+      "pbrMetallicRoughness": {
+        "baseColorTexture": {
+          "index": 0,
+          "extensions": {
+            "KHR_texture_transform": {
+              "texCoord": 0
+            }
+          }
+        },
+        "metallicFactor": 0.0,
+        "roughnessFactor": 0.9292893260717392
+      },
+      "name": "Material_u1_v1"
+    }
+  ],
+  "meshes": [
+    {
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 0,
+            "NORMAL": 1,
+            "TANGENT": 2,
+            "TEXCOORD_0": 3,
+            "COLOR_0": 4
+          },
+          "indices": 5,
+          "material": 0
+        }
+      ],
+      "name": "gol"
+    }
+  ],
+  "nodes": [
+    {
+      "children": [
+        1
+      ],
+      "name": "gol"
+    },
+    {
+      "mesh": 0,
+      "rotation": [
+        0.0,
+        0.0,
+        -0.7071068,
+        0.7071068
+      ],
+      "scale": [
+        0.004,
+        0.004,
+        0.004
+      ],
+      "translation": [
+        0.0,
+        0.0,
+        -0.142
+      ],
+      "name": "gol"
+    }
+  ],
+  "samplers": [
+    {
+      "minFilter": 9987
+    }
+  ],
+  "textures": [
+    {
+      "sampler": 0,
+      "source": 0,
+      "name": "bud_u1_v1"
+    }
+  ]
+}
