@@ -44,7 +44,8 @@ function createRingTexture(size = 2048, segments = 8, gapSize = Math.PI / 12) {
     ctx.lineWidth = outerRadius - innerRadius;
     ctx.strokeStyle = "white";
     ctx.lineCap = "round";  // Smooth segment edges
-
+    ctx.shadowColor = "rgba(255, 255, 255, 0.2)";
+    ctx.shadowBlur = 1;
     for (let i = 0; i < segments; i++) {
         const startAngle = (i * (Math.PI * 2)) / segments;
         const endAngle = startAngle + ((Math.PI * 2) / segments) - gapSize;

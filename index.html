@@ -2,7 +2,10 @@
 <html lang="en">
 	<head>
 		<meta charset="utf-8">
-		<title>Volo 3JS Proto</title>
+		<div id="heading">
+    <h1>The Volo Proto</h1>
+    <div class="border"></div>
+</div>
 
 		<link rel="stylesheet" href="public/index.css">
 
@@ -30,8 +33,54 @@
       <div class="border"></div>
     </div>
     <div id="progress-container">
-      <div id="progress">Engaging Hyperdrive...</div>
+      <div id="progress">Blooming...</div>
     </div>
 		<script type="module" src="./main.js"></script>
-	</body>
+    <div id="footer-text">Marshmallow</div>
+
+  
+  <style>
+#heading h1 {
+    font-size: 24px; /* Smaller size */
+    font-weight: 300; /* Lighter weight */
+    color: rgba(255, 255, 255, 0.6); /* Softer white */
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    opacity: 0.7;
+    transition: opacity 0.3s ease-in-out;
+}
+
+#heading:hover h1 {
+    opacity: 1; /* Becomes fully visible when hovered */
+}
+
+.border {
+    width: 50px;
+    height: 2px;
+    background: rgba(255, 255, 255, 0.4);
+   
+}
+      #footer-text {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 20px;
+    font-family: 'Arial', sans-serif;
+    font-weight: 300;
+    color: rgba(255, 255, 255, 0.8);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    opacity: 0.8;
+    transition: opacity 0.3s;
+}
+
+#footer-text:hover {
+    opacity: 1;
+}
+
+  </style>
+  
+  
+  </body>
 </html>
