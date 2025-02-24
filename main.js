@@ -1,7 +1,6 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-
 // Renderer Setup
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -30,7 +29,7 @@ controls.target = new THREE.Vector3(0, 1, 0);
 controls.update();
 
 // Function to Create a High-Resolution Segmented Ring Texture
-function createRingTexture(size = 1024, segments = 8, gapSize = Math.PI / 12) {
+function createRingTexture(size = 2048, segments = 8, gapSize = Math.PI / 12) {
     const canvas = document.createElement('canvas');
     canvas.width = size;
     canvas.height = size;
@@ -56,13 +55,16 @@ function createRingTexture(size = 1024, segments = 8, gapSize = Math.PI / 12) {
     }
 
     const texture = new THREE.CanvasTexture(canvas);
+    texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+    texture.magFilter = THREE.LinearFilter;
+    texture.minFilter = THREE.LinearMipMapLinearFilter;
     texture.needsUpdate = true;
     return texture;
 }
 
 // Ground Plane with High-Res Segmented Ring Texture
-const ringTexture = createRingTexture(1024, 12, Math.PI / 18);  // 12 segments, small gaps
-const groundGeometry = new THREE.PlaneGeometry(20, 20, 32, 32);
+const ringTexture = createRingTexture(2048, 12, Math.PI / 18);  // 12 segments, small gaps
+const groundGeometry = new THREE.PlaneGeometry(20, 20, 128  , 128);
 groundGeometry.rotateX(-Math.PI / 2);
 
 const groundMaterial = new THREE.MeshStandardMaterial({
@@ -128,5 +130,119 @@ function animate() {
     controls.update();
     renderer.render(scene, camera);
 }
+
+/*
+
+// Create the dot (small sphere)
+const dotGeometry = new THREE.SphereGeometry(0.05, 32, 32);
+const dotMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+const dot = new THREE.Mesh(dotGeometry, dotMaterial);
+dot.position.set(0,4 , 0);
+scene.add(dot);
+
+// Raycaster for click detection
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+
+// Function to handle click event
+function onMouseClick(event) {
+    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+    raycaster.setFromCamera(mouse, camera);
+    const intersects = raycaster.intersectObject(dot);
+
+    if (intersects.length > 0) {
+        startDrawing();
+    }
+}
+
+// Add event listener for clicks
+window.addEventListener('click', onMouseClick);
+
+// Function to draw the animated line
+function startDrawing() {
+    // Step 1: Create the line geometry
+    const points = [new THREE.Vector3(0, 1, 0)]; // Start at dot
+    const lineGeometry = new THREE.BufferGeometry().setFromPoints(points);
+    const lineMaterial = new THREE.LineBasicMaterial({ color: 0xffffff });
+    const line = new THREE.Line(lineGeometry, lineMaterial);
+    scene.add(line);
+
+    let timeElapsed = 0;
+    let isSecondSegment = false;
+
+    function animateLine() {
+        timeElapsed += 0.016; // Simulating 60 FPS (~16ms per frame)
+
+        if (timeElapsed < 0.3) {
+            // Move right for 2cm (0.02 units per frame for ~0.3s)
+            points.push(new THREE.Vector3(timeElapsed * 0.07, 1, 0));
+        } else if (!isSecondSegment) {
+            isSecondSegment = true;
+            timeElapsed = 0;
+        } else if (timeElapsed < 0.3) {
+            // Move up at 60 degrees
+            const lastPoint = points[points.length - 1];
+            const angle = THREE.MathUtils.degToRad(60);
+            const newX = lastPoint.x + 0.07 * Math.cos(angle);
+            const newY = lastPoint.y + 0.07 * Math.sin(angle);
+            points.push(new THREE.Vector3(newX, newY, 0));
+        } else {
+            // After animation, show text box
+            showTextBox();
+            return;
+        }
+
+        lineGeometry.setFromPoints(points);
+        requestAnimationFrame(animateLine);
+    }
+
+    animateLine();
+}
+
+// Function to show the text box
+function showTextBox() {
+    const textBox = document.createElement('div');
+    textBox.id = 'text-box';
+    textBox.innerHTML = '<span></span>'; // Empty span for typing effect
+    document.body.appendChild(textBox);
+
+    const styles = `
+        #text-box {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 20px;
+            font-size: 18px;
+            font-family: Arial, sans-serif;
+            border-radius: 10px;
+            border: 2px solid white;
+            min-width: 200px;
+            text-align: center;
+        }
+    `;
+    const styleSheet = document.createElement("style");
+    styleSheet.type = "text/css";
+    styleSheet.innerText = styles;
+    document.head.appendChild(styleSheet);
+
+    // Typing effect
+    const text = "This is a goooood one :)";
+    let i = 0;
+    function type() {
+        if (i < text.length) {
+            document.querySelector("#text-box span").innerHTML += text[i];
+            i++;
+            setTimeout(type, 50);
+        }
+    }
+    type();
+}
+
+*/
 
 animate();
