@@ -185,16 +185,11 @@ function onMouseClick(event) {
 
     if (intersects.length > 0) {
         clearPreviousAnimations();
-        startDrawingMultipleLines();
+        showAllTextBoxes();
     }
 }
 
 function clearPreviousAnimations() {
-    // Remove existing lines
-    activeLines.forEach(line => scene.remove(line));
-    activeLines = [];
-    
-    // Remove existing text boxes
     activeTextBoxes.forEach(box => {
         if (box && box.parentNode) {
             box.parentNode.removeChild(box);
@@ -203,97 +198,37 @@ function clearPreviousAnimations() {
     activeTextBoxes = [];
 }
 
-function startDrawingMultipleLines() {
-    const startPoint = new THREE.Vector3(0, 4, 0);
-    const directions = [
-        { angle: -30, length: 3, height: 0.5 },    // Right-up
-        { angle: -60, length: 3, height: 0 },      // Right-middle
-        { angle: -90, length: 3, height: -0.5 },   // Right-down
-        { angle: -120, length: 3, height: -1 },    // Right-lower
-        { angle: -150, length: 3, height: -1.5 }   // Right-lowest
-    ];
+function showAllTextBoxes() {
+    const container = document.createElement('div');
+    container.className = 'info-container';
+    document.body.appendChild(container);
+    activeTextBoxes.push(container);
 
-    directions.forEach((direction, index) => {
-        if (index < textContents.length) {
-            drawAnimatedLine(startPoint, direction.angle, direction.length, direction.height, index);
-        }
-    });
-}
-
-function drawAnimatedLine(startPoint, angle, length, height, textIndex) {
-    const points = [startPoint.clone()];
-    const lineGeometry = new THREE.BufferGeometry().setFromPoints(points);
-    const lineMaterial = new THREE.LineBasicMaterial({ 
-        color: 0xffffff,
-        transparent: true,
-        opacity: 0.7
-    });
-    const line = new THREE.Line(lineGeometry, lineMaterial);
-    scene.add(line);
-    activeLines.push(line);
-
-    const radians = THREE.MathUtils.degToRad(angle);
-    let progress = 0;
-    const animationDuration = 0.8;
-    const finalX = startPoint.x + Math.cos(radians) * length;
-    const finalY = startPoint.y + height;
-    const finalZ = startPoint.z + Math.sin(radians) * length;
-
-    function animateLine() {
-        progress += 0.016;
-        
-        if (progress < animationDuration) {
-            const t = progress / animationDuration;
-            const currentX = startPoint.x + (finalX - startPoint.x) * t;
-            const currentY = startPoint.y + (finalY - startPoint.y) * t;
-            const currentZ = startPoint.z + (finalZ - startPoint.z) * t;
-            points.push(new THREE.Vector3(currentX, currentY, currentZ));
-            lineGeometry.setFromPoints(points);
-            requestAnimationFrame(animateLine);
-        } else {
-            showTextBox(textContents[textIndex], finalX, finalY, finalZ);
-        }
-    }
-
-    animateLine();
-}
-
-function showTextBox(content, x, y, z) {
-    const textBox = document.createElement('div');
-    textBox.className = 'info-text-box';
-    textBox.innerHTML = `
-        <div class="title">${content.title}</div>
-        <div class="text"><span></span></div>
-    `;
-    document.body.appendChild(textBox);
-    activeTextBoxes.push(textBox);
-
-    // Position the text box in 3D space
-    const vector = new THREE.Vector3(x, y, z);
-    vector.project(camera);
-    
-    const widthHalf = window.innerWidth / 2;
-    const heightHalf = window.innerHeight / 2;
-    
-    const screenX = (vector.x * widthHalf) + widthHalf;
-    const screenY = -(vector.y * heightHalf) + heightHalf;
-
-    // Update styles
+    // Add styles if they don't exist
     if (!document.getElementById('info-styles')) {
         const styles = `
-            .info-text-box {
+            .info-container {
                 position: fixed;
+                top: 40px;
+                left: 40px;
+                display: flex;
+                flex-direction: column;
+                gap: 15px;
+                max-width: 300px;
+                pointer-events: none;
+            }
+            .info-text-box {
                 background: rgba(0, 0, 0, 0.75);
                 color: white;
                 padding: 12px 15px;
                 font-family: 'Arial', sans-serif;
                 border-radius: 4px;
                 border-left: 2px solid white;
-                max-width: 250px;
-                pointer-events: none;
                 opacity: 0;
-                animation: fadeIn 0.5s forwards;
                 backdrop-filter: blur(5px);
+                transform: translateX(-20px);
+                animation: slideIn 0.5s forwards;
+                animation-delay: calc(var(--index) * 0.1s);
             }
             .info-text-box .title {
                 font-size: 14px;
@@ -308,8 +243,11 @@ function showTextBox(content, x, y, z) {
                 color: rgba(255, 255, 255, 0.9);
                 line-height: 1.4;
             }
-            @keyframes fadeIn {
-                to { opacity: 1; }
+            @keyframes slideIn {
+                to {
+                    opacity: 1;
+                    transform: translateX(0);
+                }
             }
         `;
         const styleSheet = document.createElement("style");
@@ -319,58 +257,39 @@ function showTextBox(content, x, y, z) {
         document.head.appendChild(styleSheet);
     }
 
-    textBox.style.left = `${screenX}px`;
-    textBox.style.top = `${screenY}px`;
-    textBox.style.transform = 'translate(20px, -50%)';
+    // Create and animate each text box
+    textContents.forEach((content, index) => {
+        const textBox = document.createElement('div');
+        textBox.className = 'info-text-box';
+        textBox.style.setProperty('--index', index);
+        textBox.innerHTML = `
+            <div class="title">${content.title}</div>
+            <div class="text"><span></span></div>
+        `;
+        container.appendChild(textBox);
 
-    // Typing effect
-    let i = 0;
-    function type() {
-        if (i < content.text.length) {
-            textBox.querySelector(".text span").innerHTML += content.text.charAt(i);
-            i++;
-            setTimeout(type, 25);
-        }
-    }
-    type();
+        // Typing effect with delay based on index
+        setTimeout(() => {
+            let i = 0;
+            function type() {
+                if (i < content.text.length) {
+                    textBox.querySelector(".text span").innerHTML += content.text.charAt(i);
+                    i++;
+                    setTimeout(type, 25);
+                }
+            }
+            type();
+        }, index * 200); // Delay start of typing based on box index
+    });
 }
 
 // Add click event listener
 window.addEventListener('click', onMouseClick);
 
-// Update text positions in animation loop
-function updateTextPositions() {
-    activeTextBoxes.forEach((textBox, index) => {
-        if (textBox && textBox.parentNode) {
-            const line = activeLines[index];
-            if (line) {
-                const lastPoint = line.geometry.attributes.position.array;
-                const length = lastPoint.length;
-                const vector = new THREE.Vector3(
-                    lastPoint[length - 3],
-                    lastPoint[length - 2],
-                    lastPoint[length - 1]
-                );
-                vector.project(camera);
-                
-                const widthHalf = window.innerWidth / 2;
-                const heightHalf = window.innerHeight / 2;
-                
-                const screenX = (vector.x * widthHalf) + widthHalf;
-                const screenY = -(vector.y * heightHalf) + heightHalf;
-                
-                textBox.style.left = `${screenX}px`;
-                textBox.style.top = `${screenY}px`;
-            }
-        }
-    });
-}
-
 // Modify the animate function to update text positions
 function animate() {
     requestAnimationFrame(animate);
     controls.update();
-    updateTextPositions();
     renderer.render(scene, camera);
 }
 
