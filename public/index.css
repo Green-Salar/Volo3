@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=Outfit:wght@200;300;400;500&display=swap');
+
 @font-face {
   font-family: 'SF Distant Galaxy';
   src: local('SF Distant Galaxy'), url(fonts/SF\ Distant\ Galaxy.ttf), format('ttf');
@@ -41,4 +43,144 @@ h1 {
 #progress {
   font-size: 3em;
   color: white;
+}
+
+/* Info Container Styles */
+.info-container {
+    position: fixed;
+    top: 120px;
+    left: 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-width: 400px;
+    pointer-events: none;
+    z-index: 1000;
+}
+
+.info-text-box {
+    background: linear-gradient(
+        135deg, 
+        rgba(255, 255, 255, 0.05) 0%,
+        rgba(255, 255, 255, 0.02) 100%
+    );
+    padding: 20px;
+    border-radius: 12px;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px); /* For Safari */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    opacity: 0;
+    transform: translateX(-20px);
+    -webkit-transform: translateX(-20px);
+    animation: slideIn 0.5s forwards;
+    -webkit-animation: slideIn 0.5s forwards;
+    animation-delay: calc(var(--index) * 0.1s);
+    -webkit-animation-delay: calc(var(--index) * 0.1s);
+}
+
+.info-text-box .highlight {
+    font-family: 'Syncopate', sans-serif;
+    font-size: 10px;
+    color: #64ffda;
+    letter-spacing: 2px;
+    margin-bottom: 4px;
+    font-weight: 400;
+    text-transform: uppercase;
+}
+
+.info-text-box .title {
+    font-family: 'Syncopate', sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    color: rgba(255, 255, 255, 0.95);
+    margin-bottom: 12px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.info-text-box .text {
+    font-family: 'Outfit', sans-serif;
+    font-size: 15px;
+    color: rgba(255, 255, 255, 0.7);
+    line-height: 1.6;
+    font-weight: 300;
+    letter-spacing: 0.5px;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@-webkit-keyframes slideIn {
+    from {
+        opacity: 0;
+        -webkit-transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        -webkit-transform: translateX(0);
+    }
+}
+
+/* Mobile Styles */
+@media screen and (max-width: 768px) {
+    .info-container {
+        top: auto;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: calc(100% - 40px);
+        max-width: none;
+        gap: 8px;
+    }
+    
+    .info-text-box {
+        padding: 15px;
+        background: rgba(0, 0, 0, 0.85);
+    }
+    
+    .info-text-box .highlight {
+        font-size: 9px;
+    }
+    
+    .info-text-box .title {
+        font-size: 14px;
+        margin-bottom: 8px;
+    }
+    
+    .info-text-box .text {
+        font-size: 13px;
+        line-height: 1.4;
+    }
+}
+
+/* Small Mobile Devices */
+@media screen and (max-width: 380px) {
+    .info-container {
+        bottom: 10px;
+        width: calc(100% - 20px);
+        gap: 6px;
+    }
+    
+    .info-text-box {
+        padding: 12px;
+    }
+}
+
+/* Landscape Mode */
+@media screen and (max-height: 500px) and (orientation: landscape) {
+    .info-container {
+        top: 80px;
+        right: 20px;
+        left: auto;
+        transform: none;
+        width: 300px;
+    }
 }

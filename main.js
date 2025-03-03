@@ -125,15 +125,17 @@ window.addEventListener('resize', () => {
     renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
-// Create info button
+// Create info button with billboard effect
 const infoGeometry = new THREE.CircleGeometry(0.3, 32);
 const infoMaterial = new THREE.MeshBasicMaterial({ 
     color: 0xffffff,
     transparent: true,
-    opacity: 0.8 
+    opacity: 0.8,
+    depthTest: false // This ensures it's always visible
 });
 const infoButton = new THREE.Mesh(infoGeometry, infoMaterial);
 infoButton.position.set(0, 4, 0);
+infoButton.renderOrder = 999; // Ensure it renders on top
 scene.add(infoButton);
 
 // Add "i" text to the button
@@ -150,25 +152,47 @@ context.fillText('i', 32, 32);
 const textTexture = new THREE.CanvasTexture(canvas);
 const textMaterial = new THREE.MeshBasicMaterial({
     map: textTexture,
-    transparent: true
+    transparent: true,
+    depthTest: false
 });
 const textGeometry = new THREE.PlaneGeometry(0.3, 0.3);
 const textMesh = new THREE.Mesh(textGeometry, textMaterial);
 textMesh.position.copy(infoButton.position);
 textMesh.position.z += 0.01;
+textMesh.renderOrder = 1000; // Ensure text renders on top of the button
 scene.add(textMesh);
 
 // Raycaster setup
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 
-// Text content for different points
+// Text content with updated structure
 const textContents = [
-    { title: "VOLO Marshmallow Milk", text: "Phenotype-hunted by Capulator" },
-    { title: "Cultivation", text: "Date: Feb 2025" },
-    { title: "Effects", text: "Euphoric • Creative • Relaxing" },
-    { title: "Potency", text: "THC: 26-32%" },
-    { title: "Terpenes", text: "Lucky Cereal • Sweet • Creamy" }
+    { 
+        title: "MARSHMALLOW MILK", 
+        text: "Phenotype-hunted by Capulator",
+        highlight: "VOLO EXCLUSIVE"
+    },
+    { 
+        title: "CULTIVATION", 
+        text: "February 2025",
+        highlight: "ONTARIO GROWN"
+    },
+    { 
+        title: "EFFECTS", 
+        text: "Euphoric • Creative • Relaxing",
+        highlight: "HYBRID"
+    },
+    { 
+        title: "POTENCY", 
+        text: "THC: 26-32%",
+        highlight: "HIGH"
+    },
+    { 
+        title: "TERPENES", 
+        text: "Lucky Cereal • Sweet • Creamy",
+        highlight: "RARE"
+    }
 ];
 
 // Store lines and text boxes
@@ -199,63 +223,16 @@ function clearPreviousAnimations() {
 }
 
 function showAllTextBoxes() {
+    // Remove any existing containers first
+    const existingContainer = document.querySelector('.info-container');
+    if (existingContainer) {
+        existingContainer.remove();
+    }
+
     const container = document.createElement('div');
     container.className = 'info-container';
     document.body.appendChild(container);
     activeTextBoxes.push(container);
-
-    // Add styles if they don't exist
-    if (!document.getElementById('info-styles')) {
-        const styles = `
-            .info-container {
-                position: fixed;
-                top: 40px;
-                left: 40px;
-                display: flex;
-                flex-direction: column;
-                gap: 15px;
-                max-width: 300px;
-                pointer-events: none;
-            }
-            .info-text-box {
-                background: rgba(0, 0, 0, 0.75);
-                color: white;
-                padding: 12px 15px;
-                font-family: 'Arial', sans-serif;
-                border-radius: 4px;
-                border-left: 2px solid white;
-                opacity: 0;
-                backdrop-filter: blur(5px);
-                transform: translateX(-20px);
-                animation: slideIn 0.5s forwards;
-                animation-delay: calc(var(--index) * 0.1s);
-            }
-            .info-text-box .title {
-                font-size: 14px;
-                font-weight: bold;
-                margin-bottom: 4px;
-                color: #fff;
-                text-transform: uppercase;
-                letter-spacing: 1px;
-            }
-            .info-text-box .text {
-                font-size: 13px;
-                color: rgba(255, 255, 255, 0.9);
-                line-height: 1.4;
-            }
-            @keyframes slideIn {
-                to {
-                    opacity: 1;
-                    transform: translateX(0);
-                }
-            }
-        `;
-        const styleSheet = document.createElement("style");
-        styleSheet.id = 'info-styles';
-        styleSheet.type = "text/css";
-        styleSheet.innerText = styles;
-        document.head.appendChild(styleSheet);
-    }
 
     // Create and animate each text box
     textContents.forEach((content, index) => {
@@ -263,12 +240,13 @@ function showAllTextBoxes() {
         textBox.className = 'info-text-box';
         textBox.style.setProperty('--index', index);
         textBox.innerHTML = `
+            <div class="highlight">${content.highlight}</div>
             <div class="title">${content.title}</div>
             <div class="text"><span></span></div>
         `;
         container.appendChild(textBox);
 
-        // Typing effect with delay based on index
+        // Typing effect with delay
         setTimeout(() => {
             let i = 0;
             function type() {
@@ -279,7 +257,7 @@ function showAllTextBoxes() {
                 }
             }
             type();
-        }, index * 200); // Delay start of typing based on box index
+        }, index * 200);
     });
 }
 
@@ -290,6 +268,11 @@ window.addEventListener('click', onMouseClick);
 function animate() {
     requestAnimationFrame(animate);
     controls.update();
+
+    // Make button and text face the camera
+    infoButton.quaternion.copy(camera.quaternion);
+    textMesh.quaternion.copy(camera.quaternion);
+
     renderer.render(scene, camera);
 }
 
