@@ -77,6 +77,7 @@ h1 {
     -webkit-animation: slideIn 0.5s forwards;
     animation-delay: calc(var(--index) * 0.1s);
     -webkit-animation-delay: calc(var(--index) * 0.1s);
+    pointer-events: auto;
 }
 
 .info-text-box::before {
