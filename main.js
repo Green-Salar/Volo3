@@ -164,9 +164,11 @@ const mouse = new THREE.Vector2();
 
 // Text content for different points
 const textContents = [
-    "Discover VOLO Marshmallow Milk, a highly sought-after Californian strain meticulously phenotype-hunted by the legendary Capulator.",
-    "Marshmallow Milk exudes strong terpenes with a hint reminiscent of the beloved Lucky Cereal Marshmallow Milk. Proudly Ontario-grown, VOLO combines artisanal cultivation methods with cutting-edge genetics to create consistent, high-quality cannabis",
-    "THC 26 - 32%"
+    { title: "VOLO Marshmallow Milk", text: "Phenotype-hunted by Capulator" },
+    { title: "Cultivation", text: "Date: Feb 2025" },
+    { title: "Effects", text: "Euphoric • Creative • Relaxing" },
+    { title: "Potency", text: "THC: 26-32%" },
+    { title: "Terpenes", text: "Lucky Cereal • Sweet • Creamy" }
 ];
 
 // Store lines and text boxes
@@ -204,58 +206,70 @@ function clearPreviousAnimations() {
 function startDrawingMultipleLines() {
     const startPoint = new THREE.Vector3(0, 4, 0);
     const directions = [
-        { angle: 0, length: 2 },    // Right
-        { angle: 120, length: 2 },  // Left-up
-        { angle: 240, length: 2 }   // Left-down
+        { angle: -30, length: 3, height: 0.5 },    // Right-up
+        { angle: -60, length: 3, height: 0 },      // Right-middle
+        { angle: -90, length: 3, height: -0.5 },   // Right-down
+        { angle: -120, length: 3, height: -1 },    // Right-lower
+        { angle: -150, length: 3, height: -1.5 }   // Right-lowest
     ];
 
     directions.forEach((direction, index) => {
-        drawAnimatedLine(startPoint, direction.angle, direction.length, index);
+        if (index < textContents.length) {
+            drawAnimatedLine(startPoint, direction.angle, direction.length, direction.height, index);
+        }
     });
 }
 
-function drawAnimatedLine(startPoint, angle, length, textIndex) {
+function drawAnimatedLine(startPoint, angle, length, height, textIndex) {
     const points = [startPoint.clone()];
     const lineGeometry = new THREE.BufferGeometry().setFromPoints(points);
-    const lineMaterial = new THREE.LineBasicMaterial({ color: 0xffffff });
+    const lineMaterial = new THREE.LineBasicMaterial({ 
+        color: 0xffffff,
+        transparent: true,
+        opacity: 0.7
+    });
     const line = new THREE.Line(lineGeometry, lineMaterial);
     scene.add(line);
     activeLines.push(line);
 
     const radians = THREE.MathUtils.degToRad(angle);
     let progress = 0;
-    const animationDuration = 1; // seconds
+    const animationDuration = 0.8;
     const finalX = startPoint.x + Math.cos(radians) * length;
-    const finalY = startPoint.y + Math.sin(radians) * length;
+    const finalY = startPoint.y + height;
+    const finalZ = startPoint.z + Math.sin(radians) * length;
 
     function animateLine() {
-        progress += 0.016; // approximately 60fps
+        progress += 0.016;
         
         if (progress < animationDuration) {
             const t = progress / animationDuration;
             const currentX = startPoint.x + (finalX - startPoint.x) * t;
             const currentY = startPoint.y + (finalY - startPoint.y) * t;
-            points.push(new THREE.Vector3(currentX, currentY, 0));
+            const currentZ = startPoint.z + (finalZ - startPoint.z) * t;
+            points.push(new THREE.Vector3(currentX, currentY, currentZ));
             lineGeometry.setFromPoints(points);
             requestAnimationFrame(animateLine);
         } else {
-            // Show text box when line animation completes
-            showTextBox(textContents[textIndex], angle, finalX, finalY);
+            showTextBox(textContents[textIndex], finalX, finalY, finalZ);
         }
     }
 
     animateLine();
 }
 
-function showTextBox(text, angle, x, y) {
+function showTextBox(content, x, y, z) {
     const textBox = document.createElement('div');
     textBox.className = 'info-text-box';
-    textBox.innerHTML = '<span></span>';
+    textBox.innerHTML = `
+        <div class="title">${content.title}</div>
+        <div class="text"><span></span></div>
+    `;
     document.body.appendChild(textBox);
     activeTextBoxes.push(textBox);
 
-    // Position the text box based on the line end point
-    const vector = new THREE.Vector3(x, y, 0);
+    // Position the text box in 3D space
+    const vector = new THREE.Vector3(x, y, z);
     vector.project(camera);
     
     const widthHalf = window.innerWidth / 2;
@@ -264,23 +278,35 @@ function showTextBox(text, angle, x, y) {
     const screenX = (vector.x * widthHalf) + widthHalf;
     const screenY = -(vector.y * heightHalf) + heightHalf;
 
-    // Add styles
+    // Update styles
     if (!document.getElementById('info-styles')) {
         const styles = `
             .info-text-box {
                 position: fixed;
-                background: rgba(0, 0, 0, 0.8);
+                background: rgba(0, 0, 0, 0.75);
                 color: white;
-                padding: 15px;
-                font-size: 16px;
-                font-family: Arial, sans-serif;
-                border-radius: 8px;
-                border: 1px solid white;
-                max-width: 300px;
-                text-align: left;
+                padding: 12px 15px;
+                font-family: 'Arial', sans-serif;
+                border-radius: 4px;
+                border-left: 2px solid white;
+                max-width: 250px;
                 pointer-events: none;
                 opacity: 0;
                 animation: fadeIn 0.5s forwards;
+                backdrop-filter: blur(5px);
+            }
+            .info-text-box .title {
+                font-size: 14px;
+                font-weight: bold;
+                margin-bottom: 4px;
+                color: #fff;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+            }
+            .info-text-box .text {
+                font-size: 13px;
+                color: rgba(255, 255, 255, 0.9);
+                line-height: 1.4;
             }
             @keyframes fadeIn {
                 to { opacity: 1; }
@@ -295,15 +321,15 @@ function showTextBox(text, angle, x, y) {
 
     textBox.style.left = `${screenX}px`;
     textBox.style.top = `${screenY}px`;
-    textBox.style.transform = 'translate(-50%, -50%)';
+    textBox.style.transform = 'translate(20px, -50%)';
 
     // Typing effect
     let i = 0;
     function type() {
-        if (i < text.length) {
-            textBox.querySelector("span").innerHTML += text.charAt(i);
+        if (i < content.text.length) {
+            textBox.querySelector(".text span").innerHTML += content.text.charAt(i);
             i++;
-            setTimeout(type, 30);
+            setTimeout(type, 25);
         }
     }
     type();
