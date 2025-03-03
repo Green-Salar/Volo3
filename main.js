@@ -125,125 +125,227 @@ window.addEventListener('resize', () => {
     renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
-// Animation Loop
-function animate() {
-    requestAnimationFrame(animate);
-    controls.update();
-    renderer.render(scene, camera);
-}
+// Create info button
+const infoGeometry = new THREE.CircleGeometry(0.3, 32);
+const infoMaterial = new THREE.MeshBasicMaterial({ 
+    color: 0xffffff,
+    transparent: true,
+    opacity: 0.8 
+});
+const infoButton = new THREE.Mesh(infoGeometry, infoMaterial);
+infoButton.position.set(0, 4, 0);
+scene.add(infoButton);
 
-/*
+// Add "i" text to the button
+const canvas = document.createElement('canvas');
+canvas.width = 64;
+canvas.height = 64;
+const context = canvas.getContext('2d');
+context.fillStyle = '#000000';
+context.font = 'bold 40px Arial';
+context.textAlign = 'center';
+context.textBaseline = 'middle';
+context.fillText('i', 32, 32);
 
-// Create the dot (small sphere)
-const dotGeometry = new THREE.SphereGeometry(0.05, 32, 32);
-const dotMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
-const dot = new THREE.Mesh(dotGeometry, dotMaterial);
-dot.position.set(0,4 , 0);
-scene.add(dot);
+const textTexture = new THREE.CanvasTexture(canvas);
+const textMaterial = new THREE.MeshBasicMaterial({
+    map: textTexture,
+    transparent: true
+});
+const textGeometry = new THREE.PlaneGeometry(0.3, 0.3);
+const textMesh = new THREE.Mesh(textGeometry, textMaterial);
+textMesh.position.copy(infoButton.position);
+textMesh.position.z += 0.01;
+scene.add(textMesh);
 
-// Raycaster for click detection
+// Raycaster setup
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 
-// Function to handle click event
+// Text content for different points
+const textContents = [
+    "Discover VOLO Marshmallow Milk, a highly sought-after Californian strain meticulously phenotype-hunted by the legendary Capulator.",
+    "Marshmallow Milk exudes strong terpenes with a hint reminiscent of the beloved Lucky Cereal Marshmallow Milk. Proudly Ontario-grown, VOLO combines artisanal cultivation methods with cutting-edge genetics to create consistent, high-quality cannabis",
+    "THC 26 - 32%"
+];
+
+// Store lines and text boxes
+let activeLines = [];
+let activeTextBoxes = [];
+
+// Handle click events
 function onMouseClick(event) {
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
     mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
     raycaster.setFromCamera(mouse, camera);
-    const intersects = raycaster.intersectObject(dot);
+    const intersects = raycaster.intersectObject(infoButton);
 
     if (intersects.length > 0) {
-        startDrawing();
+        clearPreviousAnimations();
+        startDrawingMultipleLines();
     }
 }
 
-// Add event listener for clicks
-window.addEventListener('click', onMouseClick);
+function clearPreviousAnimations() {
+    // Remove existing lines
+    activeLines.forEach(line => scene.remove(line));
+    activeLines = [];
+    
+    // Remove existing text boxes
+    activeTextBoxes.forEach(box => {
+        if (box && box.parentNode) {
+            box.parentNode.removeChild(box);
+        }
+    });
+    activeTextBoxes = [];
+}
 
-// Function to draw the animated line
-function startDrawing() {
-    // Step 1: Create the line geometry
-    const points = [new THREE.Vector3(0, 1, 0)]; // Start at dot
+function startDrawingMultipleLines() {
+    const startPoint = new THREE.Vector3(0, 4, 0);
+    const directions = [
+        { angle: 0, length: 2 },    // Right
+        { angle: 120, length: 2 },  // Left-up
+        { angle: 240, length: 2 }   // Left-down
+    ];
+
+    directions.forEach((direction, index) => {
+        drawAnimatedLine(startPoint, direction.angle, direction.length, index);
+    });
+}
+
+function drawAnimatedLine(startPoint, angle, length, textIndex) {
+    const points = [startPoint.clone()];
     const lineGeometry = new THREE.BufferGeometry().setFromPoints(points);
     const lineMaterial = new THREE.LineBasicMaterial({ color: 0xffffff });
     const line = new THREE.Line(lineGeometry, lineMaterial);
     scene.add(line);
+    activeLines.push(line);
 
-    let timeElapsed = 0;
-    let isSecondSegment = false;
+    const radians = THREE.MathUtils.degToRad(angle);
+    let progress = 0;
+    const animationDuration = 1; // seconds
+    const finalX = startPoint.x + Math.cos(radians) * length;
+    const finalY = startPoint.y + Math.sin(radians) * length;
 
     function animateLine() {
-        timeElapsed += 0.016; // Simulating 60 FPS (~16ms per frame)
-
-        if (timeElapsed < 0.3) {
-            // Move right for 2cm (0.02 units per frame for ~0.3s)
-            points.push(new THREE.Vector3(timeElapsed * 0.07, 1, 0));
-        } else if (!isSecondSegment) {
-            isSecondSegment = true;
-            timeElapsed = 0;
-        } else if (timeElapsed < 0.3) {
-            // Move up at 60 degrees
-            const lastPoint = points[points.length - 1];
-            const angle = THREE.MathUtils.degToRad(60);
-            const newX = lastPoint.x + 0.07 * Math.cos(angle);
-            const newY = lastPoint.y + 0.07 * Math.sin(angle);
-            points.push(new THREE.Vector3(newX, newY, 0));
+        progress += 0.016; // approximately 60fps
+        
+        if (progress < animationDuration) {
+            const t = progress / animationDuration;
+            const currentX = startPoint.x + (finalX - startPoint.x) * t;
+            const currentY = startPoint.y + (finalY - startPoint.y) * t;
+            points.push(new THREE.Vector3(currentX, currentY, 0));
+            lineGeometry.setFromPoints(points);
+            requestAnimationFrame(animateLine);
         } else {
-            // After animation, show text box
-            showTextBox();
-            return;
+            // Show text box when line animation completes
+            showTextBox(textContents[textIndex], angle, finalX, finalY);
         }
-
-        lineGeometry.setFromPoints(points);
-        requestAnimationFrame(animateLine);
     }
 
     animateLine();
 }
 
-// Function to show the text box
-function showTextBox() {
+function showTextBox(text, angle, x, y) {
     const textBox = document.createElement('div');
-    textBox.id = 'text-box';
-    textBox.innerHTML = '<span></span>'; // Empty span for typing effect
+    textBox.className = 'info-text-box';
+    textBox.innerHTML = '<span></span>';
     document.body.appendChild(textBox);
+    activeTextBoxes.push(textBox);
 
-    const styles = `
-        #text-box {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.8);
-            color: white;
-            padding: 20px;
-            font-size: 18px;
-            font-family: Arial, sans-serif;
-            border-radius: 10px;
-            border: 2px solid white;
-            min-width: 200px;
-            text-align: center;
-        }
-    `;
-    const styleSheet = document.createElement("style");
-    styleSheet.type = "text/css";
-    styleSheet.innerText = styles;
-    document.head.appendChild(styleSheet);
+    // Position the text box based on the line end point
+    const vector = new THREE.Vector3(x, y, 0);
+    vector.project(camera);
+    
+    const widthHalf = window.innerWidth / 2;
+    const heightHalf = window.innerHeight / 2;
+    
+    const screenX = (vector.x * widthHalf) + widthHalf;
+    const screenY = -(vector.y * heightHalf) + heightHalf;
+
+    // Add styles
+    if (!document.getElementById('info-styles')) {
+        const styles = `
+            .info-text-box {
+                position: fixed;
+                background: rgba(0, 0, 0, 0.8);
+                color: white;
+                padding: 15px;
+                font-size: 16px;
+                font-family: Arial, sans-serif;
+                border-radius: 8px;
+                border: 1px solid white;
+                max-width: 300px;
+                text-align: left;
+                pointer-events: none;
+                opacity: 0;
+                animation: fadeIn 0.5s forwards;
+            }
+            @keyframes fadeIn {
+                to { opacity: 1; }
+            }
+        `;
+        const styleSheet = document.createElement("style");
+        styleSheet.id = 'info-styles';
+        styleSheet.type = "text/css";
+        styleSheet.innerText = styles;
+        document.head.appendChild(styleSheet);
+    }
+
+    textBox.style.left = `${screenX}px`;
+    textBox.style.top = `${screenY}px`;
+    textBox.style.transform = 'translate(-50%, -50%)';
 
     // Typing effect
-    const text = "This is a goooood one :)";
     let i = 0;
     function type() {
         if (i < text.length) {
-            document.querySelector("#text-box span").innerHTML += text[i];
+            textBox.querySelector("span").innerHTML += text.charAt(i);
             i++;
-            setTimeout(type, 50);
+            setTimeout(type, 30);
         }
     }
     type();
 }
 
-*/
+// Add click event listener
+window.addEventListener('click', onMouseClick);
+
+// Update text positions in animation loop
+function updateTextPositions() {
+    activeTextBoxes.forEach((textBox, index) => {
+        if (textBox && textBox.parentNode) {
+            const line = activeLines[index];
+            if (line) {
+                const lastPoint = line.geometry.attributes.position.array;
+                const length = lastPoint.length;
+                const vector = new THREE.Vector3(
+                    lastPoint[length - 3],
+                    lastPoint[length - 2],
+                    lastPoint[length - 1]
+                );
+                vector.project(camera);
+                
+                const widthHalf = window.innerWidth / 2;
+                const heightHalf = window.innerHeight / 2;
+                
+                const screenX = (vector.x * widthHalf) + widthHalf;
+                const screenY = -(vector.y * heightHalf) + heightHalf;
+                
+                textBox.style.left = `${screenX}px`;
+                textBox.style.top = `${screenY}px`;
+            }
+        }
+    });
+}
+
+// Modify the animate function to update text positions
+function animate() {
+    requestAnimationFrame(animate);
+    controls.update();
+    updateTextPositions();
+    renderer.render(scene, camera);
+}
 
 animate();
